@@ -1,14 +1,10 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 
 ## Loading and preprocessing the data
 
-```{r,echo=TRUE}
+
+```r
 if(!file.exists('activity.csv')){
     unzip('activity.zip')
 }
@@ -17,18 +13,24 @@ activityData <- read.csv('activity.csv')
 
 ## What is mean total number of steps taken per day?
 
-```{r,echo=TRUE}
+
+```r
 library(ggplot2)
 total.steps <- tapply(activityData$steps, activityData$date, FUN=sum, na.rm=TRUE)
 qplot(total.steps, binwidth=1000, xlab="total number of steps taken each day")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png) 
+
+```r
 meansteps <- mean(total.steps, na.rm=TRUE)
 mediansteps <- median(total.steps, na.rm=TRUE)
 ```
-* Mean of total number of steps taken per day: `r meansteps`
+* Mean of total number of steps taken per day: 9354.2295082
 
 ## What is the average daily activity pattern?
-```{r, echo=TRUE}
 
+```r
 averages <- aggregate(x=list(steps=activityData$steps), by=list(interval=activityData$interval),
                       FUN=mean, na.rm=TRUE)
 ggplot(data=averages, aes(x=interval, y=steps)) +
@@ -37,23 +39,39 @@ ggplot(data=averages, aes(x=interval, y=steps)) +
     ylab("average number of steps taken")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
+
 * Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-```{r , echo=TRUE}
+
+```r
 averages[which.max(averages$steps),]
+```
+
+```
+##     interval    steps
+## 104      835 206.1698
 ```
 
 ## Imputing missing values
 
 
-```{r, echo=TRUE}
+
+```r
 missing <- is.na(activityData$steps)
 # How many missing
 table(missing)
 ```
 
+```
+## missing
+## FALSE  TRUE 
+## 15264  2304
+```
 
-```{r,echo=TRUE}
+
+
+```r
 # Replace each missing value with the mean value of its 5-minute interval
 fill.value <- function(steps, interval) {
     filled <- NA
@@ -65,25 +83,29 @@ fill.value <- function(steps, interval) {
 }
 filled.data <- activityData
 filled.data$steps <- mapply(fill.value, filled.data$steps, filled.data$interval)
-
 ```
 
 
 
 #### Make a histrogram of the total number of steps taken each day
 
-```{r,echo=TRUE}
+
+```r
 library(ggplot2)
 
 totalsteps <- tapply(filled.data$steps, filled.data$date, sum)
 qplot(totalsteps, xlab='Total number of steps taken each day', ylab='Frequency using binwidth 500', binwidth=500)
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png) 
+
+```r
 totalstepsMean <- mean(totalsteps)
 totalstepsMedian <- median(totalsteps)
 ```
 
-* Mean (Imputed):`r totalstepsMean`
-* Median (Imputed): `r totalstepsMedian`
+* Mean (Imputed):1.0766189\times 10^{4}
+* Median (Imputed): 1.0766189\times 10^{4}
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
@@ -92,7 +114,8 @@ totalstepsMedian <- median(totalsteps)
 #### 1. Create a new factor variable in the dataset with two levels-'weekday' and 'weekend' indicating whether a given date is a weekday or weekend day.
 
 
-```{r, echo=TRUE}
+
+```r
 weekday.or.weekend <- function(date) {
     day <- weekdays(date)
     if (day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"))
@@ -108,8 +131,11 @@ filled.data$day <- sapply(filled.data$date, FUN=weekday.or.weekend)
 
 #### 2. Make a panel plot containing a time series plot
 
-```{r,echo=TRUE}
+
+```r
 averages <- aggregate(steps ~ interval + day, data=filled.data, mean)
 ggplot(averages, aes(interval, steps)) + geom_line() + facet_grid(day ~ .) +
     xlab("5-minute interval") + ylab("Number of steps")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png) 
